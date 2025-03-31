@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全球城市天气搜索</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #e0f7fa;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: #ffffff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #00796b;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #00796b;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #b0bec5;
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+            input:focus, select:focus {
+                border-color: #00796b;
+                outline: none;
+            }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00796b;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+
+            button:hover {
+                background-color: #004d40;
+            }
+
+        .weather-result {
+            margin-top: 20px;
+            text-align: center;
+            color: #00796b;
+        }
+
+        canvas {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>全球城市天气搜索</h1>
+        <div class="form-group">
+            <label for="city">选择城市:</label>
+            <select id="city" onchange="searchWeather()" onclick="clearSearchInput()">
+                <option value="New York">纽约</option>
+                <option value="London">伦敦</option>
+                <option value="Tokyo">东京</option>
+                <option value="Paris">巴黎</option>
+                <option value="Shanghai">上海</option>
+                <option value="Beijing">北京</option>
+                <option value="Moscow">莫斯科</option>
+                <option value="Sydney">悉尼</option>
+                <option value="Dubai">迪拜</option>
+                <option value="Singapore">新加坡</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="search">或输入城市名称(只能是英文或拼音):</label>
+            <input type="text" id="search" placeholder="输入城市名称">
+        </div>
+        <button onclick="searchWeather()">搜索天气</button>
+        <div class="weather-result" id="weather-result"></div>
+        <canvas id="weatherCanvas" width="200" height="200"></canvas>
+    </div>
+
+    <script>
+        async function searchWeather() {
+            const city = document.getElementById('city').value;
+            const search = document.getElementById('search').value;
+            const query = search || city;
+            const apiKey = '790819459bc6844c1ff89a620f5b39b2'; // 替换为您的API密钥
+            const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${apiKey}&units=metric&lang=zh_cn`;
+
+            if (query) {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error('网络响应失败');
+                    }
+                    const data = await response.json();
+                    displayWeather(data);
+                    drawWeatherEmoji(data.weather[0].description);
+                } catch (error) {
+                    alert('获取天气信息失败: ' + error.message);
+                }
+            } else {
+                alert('请输入或选择一个城市');
+            }
+        }
+
+        function displayWeather(data) {
+            const weatherResult = document.getElementById('weather-result');
+            weatherResult.innerHTML = `
+                        <h2>${data.name} 的天气</h2>
+                        <p>温度: ${data.main.temp}°C</p>
+                        <p>天气: ${data.weather[0].description}</p>
+                        <p>湿度: ${data.main.humidity}%</p>
+                        <p>风速: ${data.wind.speed} m/s</p>
+                        <p>大气压: ${data.main.pressure} hPa</p>
+                    `;
+        }
+
+        function clearSearchInput() {
+            document.getElementById('search').value = '';
+        }
+
+        function drawWeatherEmoji(description) {
+            const canvas = document.getElementById('weatherCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let emoji = '';
+            if (description.includes('晴')) {
+                emoji = '☀️';
+            } else if (description.includes('少云')) {
+                emoji = '🌤️';
+            } else if (description.includes('多云')) {
+                emoji = '☁️';
+            } else if (description.includes('阴')) {
+                emoji = '☁️';
+            } else if (description.includes('阵雨')) {
+                emoji = '🌧️';
+            } else if (description.includes('雨')) {
+                emoji = '🌧️';
+            } else if (description.includes('雷阵雨')) {
+                emoji = '⛈️';
+            } else if (description.includes('雪')) {
+                emoji = '❄️';
+            } else if (description.includes('雾')) {
+                emoji = '🌫️';
+            } else {
+                emoji = '❓';
+            }
+
+            ctx.font = '100px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(emoji, canvas.width / 2, canvas.height / 2);
+        }
+    </script>
+</body>
+</html>
